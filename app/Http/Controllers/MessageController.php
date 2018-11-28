@@ -10,6 +10,7 @@ class MessageController extends Controller
 {
 
     public function getMessagesFor($id){
+
         $messages = Message::where('sender',Auth::id())
                                 ->where('receiver',$id)
                                 ->Orwhere('sender',$id)
@@ -31,6 +32,7 @@ class MessageController extends Controller
     }
 
     public function updateUnreadMessages(Request $request) {
-        
+        $update = Message::where('sender', $request->id_sender)->where('receiver', auth()->id())->update(['read' => true]);
+        return response()->json($update);
     }
 }

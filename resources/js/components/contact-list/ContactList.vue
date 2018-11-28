@@ -54,11 +54,6 @@
                 selected: null
             }
         },
-        // watch: {
-        //     contacts (nContacts,oContacts) {
-        //         this.contacts = nContacts
-        //     }
-        // },
         methods: {
             selectContact(contact) {
                 this.selected = contact
@@ -81,6 +76,6 @@
 </script>
 <style lang="css">
     .selected {
-        background-color: #ddd;
+        background-color: #646a80;
     }
 </style>

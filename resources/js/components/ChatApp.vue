@@ -15,6 +15,7 @@
     import Conversation from './conversation/Conversation'
     import ContactList from './contact-list/ContactList'
     export default {
+        name: 'chat-app',
         components: {
             Conversation,
             ContactList
@@ -47,29 +48,35 @@
         },
         methods: {
             startChatWith(contact) {
+
                 axios.get(`/conversation/${contact.id}`)
                     .then(({
                         data
                     }) => {
                         this.messages = data;
                         this.selectedContact = contact;
+                        this.updateUnreadCount(contact.id)
                     })
             },
             newMessage(message) {
                 this.messages.push(message);
             },
             handelIncomingMessage(message) {
-                // console.log(this.selectedContact)
+
                 if(this.selectedContact && message.sender == this.selectedContact.id ) {
                     this.newMessage(message)
                 }else{
-                    console.log("Got from an other Sender", message)
+                    this.updateUnreadCount(message.sender, true)
                 }
 
             },
-            updateUnreadCount() {
-                if(this.selectedContact) {
-                    axios.post('/conversation/update-unread-messages',{sender: this.user.id, reveiver: this.selectedContact.id})
+            updateUnreadCount(idContact,reset = 0) {
+                let findContact = _.findIndex(this.contacts,{'id': idContact})
+                if(reset) {
+                    this.contacts[findContact].unread += 1
+                }else {
+                    this.contacts[findContact].unread = reset
+                    axios.post('/conversation/update-unread-messages',{id_sender: idContact})
                         .then((response) => {console.log(response.data)})
                 }
             }

@@ -5,6 +5,9 @@
                 <img src="https://bootdey.com/img/Content/avatar/avatar1.png">
             </div>
         </div>
+        <div class="col-sm-6 col-xs-6 heading-name">
+            <strong>{{ myName }}</strong>
+        </div>
         <!-- <div class="col-sm-1 col-xs-1  heading-dot  pull-right">
             <i class="fa fa-ellipsis-v fa-2x  pull-right" aria-hidden="true"></i>
         </div>
@@ -16,6 +19,15 @@
 
 <script>
     export default {
-
+        data () {
+            return {
+                myName: ''
+            }
+        },
+        mounted() {
+            // until adding VueX to share the authenticated usr widely
+            // I'll keep this option for the moment
+            this.myName = this.$root.$children[0].$options.propsData.user.name
+        },
     }
 </script>

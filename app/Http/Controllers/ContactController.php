@@ -39,10 +39,4 @@ class ContactController extends Controller
         });
         return response()->json($contacts);
     }
-
-    public function getMessagesFor($id){
-        $messages = Message::where('receiver',$id)->orWhere('sender',$id)->get();
-
-        return response()->json($messages);
-    }
 }

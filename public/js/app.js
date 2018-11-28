@@ -57176,6 +57176,7 @@ Object.defineProperty(__webpack_exports__, "__esModule", { value: true });
 
 
 /* harmony default export */ __webpack_exports__["default"] = ({
+    name: 'chat-app',
     components: {
         Conversation: __WEBPACK_IMPORTED_MODULE_0__conversation_Conversation___default.a,
         ContactList: __WEBPACK_IMPORTED_MODULE_1__contact_list_ContactList___default.a
@@ -57216,22 +57217,29 @@ Object.defineProperty(__webpack_exports__, "__esModule", { value: true });
 
                 _this2.messages = data;
                 _this2.selectedContact = contact;
+                _this2.updateUnreadCount(contact.id);
             });
         },
         newMessage: function newMessage(message) {
             this.messages.push(message);
         },
         handelIncomingMessage: function handelIncomingMessage(message) {
-            // console.log(this.selectedContact)
+
             if (this.selectedContact && message.sender == this.selectedContact.id) {
                 this.newMessage(message);
             } else {
-                console.log("Got from an other Sender", message);
+                this.updateUnreadCount(message.sender, true);
             }
         },
-        updateUnreadCount: function updateUnreadCount() {
-            if (this.selectedContact) {
-                axios.post('/conversation/update-unread-messages', { sender: this.user.id, reveiver: this.selectedContact.id }).then(function (response) {
+        updateUnreadCount: function updateUnreadCount(idContact) {
+            var reset = arguments.length > 1 && arguments[1] !== undefined ? arguments[1] : 0;
+
+            var findContact = _.findIndex(this.contacts, { 'id': idContact });
+            if (reset) {
+                this.contacts[findContact].unread += 1;
+            } else {
+                this.contacts[findContact].unread = reset;
+                axios.post('/conversation/update-unread-messages', { id_sender: idContact }).then(function (response) {
                     console.log(response.data);
                 });
             }
@@ -58085,7 +58093,7 @@ exports = module.exports = __webpack_require__(62)(false);
 
 
 // module
-exports.push([module.i, "\n.selected {\n    background-color: #ddd;\n}\n", ""]);
+exports.push([module.i, "\n.selected {\n    background-color: #646a80;\n}\n", ""]);
 
 // exports
 
@@ -58500,11 +58508,6 @@ Object.defineProperty(__webpack_exports__, "__esModule", { value: true });
         };
     },
 
-    // watch: {
-    //     contacts (nContacts,oContacts) {
-    //         this.contacts = nContacts
-    //     }
-    // },
     methods: {
         selectContact: function selectContact(contact) {
             this.selected = contact;
@@ -58595,8 +58598,22 @@ Object.defineProperty(__webpack_exports__, "__esModule", { value: true });
 //
 //
 //
+//
+//
+//
 
-/* harmony default export */ __webpack_exports__["default"] = ({});
+/* harmony default export */ __webpack_exports__["default"] = ({
+    data: function data() {
+        return {
+            myName: ''
+        };
+    },
+    mounted: function mounted() {
+        // until adding VueX to share the authenticated usr widely
+        // I'll keep this option for the moment
+        this.myName = this.$root.$children[0].$options.propsData.user.name;
+    }
+});
 
 /***/ }),
 /* 68 */
@@ -58606,20 +58623,24 @@ var render = function() {
   var _vm = this
   var _h = _vm.$createElement
   var _c = _vm._self._c || _h
-  return _vm._m(0)
+  return _c("div", { staticClass: "row heading" }, [
+    _vm._m(0),
+    _vm._v(" "),
+    _c("div", { staticClass: "col-sm-6 col-xs-6 heading-name" }, [
+      _c("strong", [_vm._v(_vm._s(_vm.myName))])
+    ])
+  ])
 }
 var staticRenderFns = [
   function() {
     var _vm = this
     var _h = _vm.$createElement
     var _c = _vm._self._c || _h
-    return _c("div", { staticClass: "row heading" }, [
-      _c("div", { staticClass: "col-sm-3 col-xs-3 heading-avatar" }, [
-        _c("div", { staticClass: "heading-avatar-icon" }, [
-          _c("img", {
-            attrs: { src: "https://bootdey.com/img/Content/avatar/avatar1.png" }
-          })
-        ])
+    return _c("div", { staticClass: "col-sm-3 col-xs-3 heading-avatar" }, [
+      _c("div", { staticClass: "heading-avatar-icon" }, [
+        _c("img", {
+          attrs: { src: "https://bootdey.com/img/Content/avatar/avatar1.png" }
+        })
       ])
     ])
   }
