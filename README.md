@@ -1,9 +1,12 @@
-"# chat-app - Demo"
+# chat-app - Demo
 
 Using:
 - Laravel 5.7.*
 - Pusher ~3.3
 - Vuejs 2.*
+
+Pusher Settings:
+- in the app settings: Enable client events
 
 Installation:
 - clone the project
