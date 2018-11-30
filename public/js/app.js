@@ -14034,9 +14034,20 @@ Vue.component('chat-app', __webpack_require__(42));
  * or customize the JavaScript scaffolding to fit your unique needs.
  */
 
+var mixin = {
+  computed: {
+    user: function user() {
+      return window.User;
+    }
+  }
+};
+
 var app = new Vue({
-  el: '#app'
+  el: '#app',
+  mixins: [mixin]
 });
+
+window.User = Laravel.user;
 
 /***/ }),
 /* 14 */
@@ -57176,48 +57187,56 @@ Object.defineProperty(__webpack_exports__, "__esModule", { value: true });
 
 
 /* harmony default export */ __webpack_exports__["default"] = ({
-    name: 'chat-app',
-    components: {
-        Conversation: __WEBPACK_IMPORTED_MODULE_0__conversation_Conversation___default.a,
-        ContactList: __WEBPACK_IMPORTED_MODULE_1__contact_list_ContactList___default.a
-    },
     props: {
         user: {
             type: Object,
             required: true
         }
     },
+    components: {
+        Conversation: __WEBPACK_IMPORTED_MODULE_0__conversation_Conversation___default.a,
+        ContactList: __WEBPACK_IMPORTED_MODULE_1__contact_list_ContactList___default.a
+    },
     data: function data() {
         return {
             selectedContact: null,
             contacts: [],
-            messages: []
+            messages: [],
+            permerssion: ''
         };
     },
     mounted: function mounted() {
         var _this = this;
 
+        this.getNotificationPermissions();
+        // Listen to incoming messages
         Echo.private('messages.' + this.user.id).listen('NewMessage', function (e) {
-            console.log(e);
+            _this.notifyUser(e.message);
             _this.handelIncomingMessage(e.message);
         });
-        axios.get('/contacts').then(function (_ref) {
-            var data = _ref.data;
-
-            _this.contacts = data;
-        });
+        // Get All Contacts
+        this.getAllContacts();
     },
 
     methods: {
-        startChatWith: function startChatWith(contact) {
+        getAllContacts: function getAllContacts() {
             var _this2 = this;
+
+            axios.get('/contacts').then(function (_ref) {
+                var data = _ref.data;
+
+                _this2.contacts = data;
+            });
+        },
+        startChatWith: function startChatWith(contact) {
+            var _this3 = this;
 
             axios.get('/conversation/' + contact.id).then(function (_ref2) {
                 var data = _ref2.data;
 
-                _this2.messages = data;
-                _this2.selectedContact = contact;
-                _this2.updateUnreadCount(contact.id);
+                _this3.messages = data.reverse();
+                _this3.selectedContact = contact;
+                _this3.updateUnreadCount(contact.id);
             });
         },
         newMessage: function newMessage(message) {
@@ -57238,10 +57257,35 @@ Object.defineProperty(__webpack_exports__, "__esModule", { value: true });
             if (reset) {
                 this.contacts[findContact].unread += 1;
             } else {
-                this.contacts[findContact].unread = reset;
-                axios.post('/conversation/update-unread-messages', { id_sender: idContact }).then(function (response) {
-                    console.log(response.data);
+                if (this.contacts[findContact].unread) {
+                    this.contacts[findContact].unread = reset;
+                    axios.post('/conversation/update-unread-messages', { id_sender: idContact }).then(function (response) {/*console.log(response.data)*/});
+                }
+            }
+        },
+        getNotificationPermissions: function getNotificationPermissions() {
+            var _this4 = this;
+
+            if (!('Notification' in window)) {
+                alert('web Notification is not supported');
+                return;
+            }
+
+            Notification.requestPermission(function (permerssion) {
+                _this4.permerssion = permerssion;
+            });
+        },
+        notifyUser: function notifyUser(message) {
+            if (this.permerssion === 'granted') {
+                var notification = new Notification('New Message From: : ' + message.user.name, {
+                    body: message.text,
+                    icon: 'https://d1nhio0ox7pgb.cloudfront.net/_img/o_collection_png/green_dark_grey/256x256/plain/message.png'
                 });
+                notification.onclick = function (e) {
+                    e.preventDefault();
+                    window.focus();
+                    this.close();
+                };
             }
         }
     }
@@ -57680,8 +57724,6 @@ Object.defineProperty(__webpack_exports__, "__esModule", { value: true });
 //
 //
 //
-//
-//
 
 /* harmony default export */ __webpack_exports__["default"] = ({
     props: {
@@ -57789,13 +57831,7 @@ var staticRenderFns = [
     var _c = _vm._self._c || _h
     return _c("div", { staticClass: "row message-previous" }, [
       _c("div", { staticClass: "col-sm-12 previous" }, [
-        _c(
-          "a",
-          {
-            attrs: { onclick: "previous(this)", id: "ankitjain28", name: "20" }
-          },
-          [_vm._v("\n                Show Previous Message!\n            ")]
-        )
+        _c("a", [_vm._v("Show Previous Message..")])
       ])
     ])
   }
@@ -57892,6 +57928,17 @@ Object.defineProperty(__webpack_exports__, "__esModule", { value: true });
             }
             this.$emit('send', this.message);
             this.message = '';
+        },
+        isTyping: function isTyping() {
+            var typing = true;
+            if (this.message === '') {
+                typing = false;
+            }
+            Echo.private('chat').whisper('typing', {
+                sender: User.id,
+                receiver: this.$parent.contact.id,
+                typing: typing
+            });
         }
     }
 });
@@ -57921,6 +57968,7 @@ var render = function() {
         attrs: { id: "comment", placeholder: "type Message..." },
         domProps: { value: _vm.message },
         on: {
+          keyup: _vm.isTyping,
           keydown: function($event) {
             if (
               !("button" in $event) &&
@@ -58488,6 +58536,10 @@ Object.defineProperty(__webpack_exports__, "__esModule", { value: true });
 //
 //
 //
+//
+//
+//
+//
 
 
 
@@ -58504,8 +58556,20 @@ Object.defineProperty(__webpack_exports__, "__esModule", { value: true });
     },
     data: function data() {
         return {
-            selected: null
+            selected: null,
+            typing: false,
+            him: null
         };
+    },
+    mounted: function mounted() {
+        var _this = this;
+
+        Echo.private('chat').listenForWhisper('typing', function (e) {
+            if (User.id === e.receiver) {
+                _this.typing = e.typing;
+                _this.him = e.sender;
+            }
+        });
     },
 
     methods: {
@@ -58516,14 +58580,14 @@ Object.defineProperty(__webpack_exports__, "__esModule", { value: true });
     },
     computed: {
         sortedContacts: function sortedContacts() {
-            var _this = this;
+            var _this2 = this;
 
             return _.sortBy(this.contacts, [function (contact) {
-                if (contact == _this.selected) {
-                    return Infinity;
+                if (contact == _this2.selected) {
+                    return -1;
                 }
-                return contact.unread;
-            }]).reverse();
+                return -contact.unread;
+            }]);
         }
     }
 
@@ -58601,6 +58665,12 @@ Object.defineProperty(__webpack_exports__, "__esModule", { value: true });
 //
 //
 //
+//
+//
+//
+//
+//
+//
 
 /* harmony default export */ __webpack_exports__["default"] = ({
     data: function data() {
@@ -58612,6 +58682,14 @@ Object.defineProperty(__webpack_exports__, "__esModule", { value: true });
         // until adding VueX to share the authenticated usr widely
         // I'll keep this option for the moment
         this.myName = this.$root.$children[0].$options.propsData.user.name;
+    },
+
+    methods: {
+        logout: function logout() {
+            axios.post('/logout').then(function (resp) {
+                location.reload();
+            });
+        }
     }
 });
 
@@ -58626,7 +58704,7 @@ var render = function() {
   return _c("div", { staticClass: "row heading" }, [
     _vm._m(0),
     _vm._v(" "),
-    _c("div", { staticClass: "col-sm-6 col-xs-6 heading-name" }, [
+    _c("div", { staticClass: "col-sm-4 col-xs-4 heading-name" }, [
       _c("strong", [_vm._v(_vm._s(_vm.myName))])
     ])
   ])
@@ -58821,15 +58899,43 @@ var render = function() {
                     ])
                   ]),
                   _vm._v(" "),
-                  _vm._m(0, true),
+                  _vm.typing && contact.id == _vm.him
+                    ? _c(
+                        "div",
+                        { staticClass: "col-sm-4 col-xs-4 sideBar-time" },
+                        [
+                          _c(
+                            "span",
+                            {
+                              staticClass: "help-block",
+                              staticStyle: {
+                                "font-style": "italic",
+                                color: "#9ddd49"
+                              }
+                            },
+                            [
+                              _vm._v(
+                                "\n                            is typing...\n                        "
+                              )
+                            ]
+                          )
+                        ]
+                      )
+                    : _vm._e(),
                   _vm._v(" "),
-                  _c("div", { staticClass: "col-sm-2 col-xs-2 sideBar-time" }, [
-                    contact.unread
-                      ? _c("span", { staticClass: "unread" }, [
-                          _vm._v(_vm._s(contact.unread))
-                        ])
-                      : _vm._e()
-                  ])
+                  _c(
+                    "div",
+                    {
+                      staticClass: "col-sm-2 col-xs-2 sideBar-time pull-right"
+                    },
+                    [
+                      contact.unread
+                        ? _c("span", { staticClass: "unread" }, [
+                            _vm._v(_vm._s(contact.unread))
+                          ])
+                        : _vm._e()
+                    ]
+                  )
                 ])
               ])
             ]
@@ -58840,16 +58946,7 @@ var render = function() {
     1
   )
 }
-var staticRenderFns = [
-  function() {
-    var _vm = this
-    var _h = _vm.$createElement
-    var _c = _vm._self._c || _h
-    return _c("div", { staticClass: "col-sm-2 col-xs-2 sideBar-time" }, [
-      _c("span", { staticClass: "time-meta x" }, [_vm._v("18:18")])
-    ])
-  }
-]
+var staticRenderFns = []
 render._withStripped = true
 module.exports = { render: render, staticRenderFns: staticRenderFns }
 if (false) {

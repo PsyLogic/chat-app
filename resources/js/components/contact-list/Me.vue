@@ -5,14 +5,20 @@
                 <img src="https://bootdey.com/img/Content/avatar/avatar1.png">
             </div>
         </div>
-        <div class="col-sm-6 col-xs-6 heading-name">
+        <div class="col-sm-4 col-xs-4 heading-name">
             <strong>{{ myName }}</strong>
         </div>
-        <!-- <div class="col-sm-1 col-xs-1  heading-dot  pull-right">
-            <i class="fa fa-ellipsis-v fa-2x  pull-right" aria-hidden="true"></i>
+        <!-- <div class="col-sm-2 col-xs-2 heading-dot pull-right">
+            <a class="dropdown-item" href="/logout"
+                onclick="event.preventDefault(); document.getElementById('logout-form').submit();">
+                <i class="fa fa-sign-out pull-right" aria-hidden="true"></i>
+            </a>
+            <form id="logout-form" action="/logout" method="POST" style="display: none;">
+                @csrf
+            </form>
         </div>
-        <div class="col-sm-2 col-xs-2 heading-compose  pull-right">
-            <i class="fa fa-comments fa-2x  pull-right" aria-hidden="true"></i>
+        <div class="col-sm-2 col-xs-2 heading-compose pull-right">
+            <i class="fa fa-user pull-right" aria-hidden="true"></i>
         </div> -->
     </div>
 </template>
@@ -29,5 +35,11 @@
             // I'll keep this option for the moment
             this.myName = this.$root.$children[0].$options.propsData.user.name
         },
+        methods: {
+            logout() {
+                axios.post('/logout')
+                    .then((resp) => { location.reload() })
+            }
+        }
     }
 </script>

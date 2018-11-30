@@ -2,9 +2,7 @@
     <div class="row message" id="conversation" v-if="contact" ref="conversation">
         <div class="row message-previous">
             <div class="col-sm-12 previous">
-                <a onclick="previous(this)" id="ankitjain28" name="20">
-                    Show Previous Message!
-                </a>
+                <a>Show Previous Message..</a>
             </div>
         </div>
 

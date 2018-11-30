@@ -25,4 +25,10 @@
 <body>
     @yield('content')
 </body>
+
+<script>
+    window.Laravel = {!! json_encode([
+        'user' => Auth::user(),
+    ]) !!};
+</script>
 </html>

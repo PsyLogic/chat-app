@@ -35,6 +35,15 @@ Vue.component('chat-app', require('./components/ChatApp.vue'));
  * or customize the JavaScript scaffolding to fit your unique needs.
  */
 
+var mixin = {
+    computed: {
+        user: function () { return window.User; }
+    }
+}
+
 const app = new Vue({
-    el: '#app'
+    el: '#app',
+    mixins: [mixin]
 });
+
+window.User = Laravel.user;

@@ -22,10 +22,14 @@
                             <span class="name-meta">{{ contact.name }}
                             </span>
                         </div>
-                        <div class="col-sm-2 col-xs-2 sideBar-time">
-                            <span class="time-meta x">18:18</span>
+
+                        <div v-if="typing && contact.id == him " class="col-sm-4 col-xs-4 sideBar-time">
+                            <span class="help-block" style="font-style: italic; color:#9ddd49;">
+                                is typing...
+                            </span>
                         </div>
-                        <div class="col-sm-2 col-xs-2 sideBar-time">
+                        
+                        <div class="col-sm-2 col-xs-2 sideBar-time pull-right">
                             <span class="unread" v-if="contact.unread">{{ contact.unread }}</span>
                         </div>
                     </div>
@@ -51,8 +55,19 @@
         },
         data() {
             return {
-                selected: null
+                selected: null,
+                typing: false,
+                him:null
             }
+        },
+        mounted() {
+            Echo.private('chat')
+            .listenForWhisper('typing', (e) => {
+                if(User.id === e.receiver) {
+                    this.typing = e.typing
+                    this.him = e.sender
+                }
+            });
         },
         methods: {
             selectContact(contact) {
@@ -64,10 +79,10 @@
             sortedContacts() {
                 return _.sortBy(this.contacts, [(contact) => {
                     if(contact == this.selected) {
-                        return Infinity
+                        return -1
                     }
-                    return contact.unread;
-                }]).reverse()
+                    return (-contact.unread);
+                }])
             }
         },
         

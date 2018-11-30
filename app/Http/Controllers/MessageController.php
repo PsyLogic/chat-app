@@ -15,7 +15,7 @@ class MessageController extends Controller
                                 ->where('receiver',$id)
                                 ->Orwhere('sender',$id)
                                 ->where('receiver',Auth::id())
-                                ->get();
+                                ->orderByDesc('created_at')->take(10)->get();
         return response()->json($messages);
     }
 
